@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P&L Marketer's Playbook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-link.active { background-color: #f59e0b; color: white; }
+        .nav-link:not(.active):hover { background-color: #fef3c7; color: #78350f; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-full md:w-64 bg-white border-r border-stone-200 p-4 md:p-6 flex-shrink-0">
+            <h1 class="text-2xl font-bold text-amber-600 mb-8">P&L Playbook</h1>
+            <ul class="space-y-2">
+                <li><a href="#" class="nav-link block p-3 rounded-lg font-medium" data-target="home">🏠 Home</a></li>
+                <li><a href="#" class="nav-link block p-3 rounded-lg font-medium" data-target="calculator">🧮 Unit Economics</a></li>
+                <li><a href="#" class="nav-link block p-3 rounded-lg font-medium" data-target="poas">💡 POAS vs ROAS</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 bg-stone-50 overflow-y-auto">
+            <!-- Home Section -->
+            <section id="home" class="content-section active">
+                <h2 class="text-4xl font-bold mb-4">Welcome to the P&L Playbook</h2>
+                <p class="text-lg text-stone-600">This guide helps marketers shift from technician to business owner by focusing on profitability.</p>
+            </section>
+
+            <!-- Unit Economics Calculator -->
+            <section id="calculator" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Unit Economics Explorer</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block mb-2 font-medium">Total Marketing Spend (₹)</label>
+                        <input type="range" id="spend" min="10000" max="500000" value="100000" class="w-full" />
+                        <div id="spendVal" class="text-amber-600 font-bold"></div>
+
+                        <label class="block mt-4 mb-2 font-medium">New Customers</label>
+                        <input type="range" id="customers" min="10" max="2000" value="100" class="w-full" />
+                        <div id="custVal" class="text-amber-600 font-bold"></div>
+                    </div>
+                    <div class="chart-container h-64">
+                        <canvas id="ltvChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- POAS vs ROAS Simulator -->
+            <section id="poas" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">POAS vs ROAS Simulator</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block mb-2 font-medium">Revenue (₹)</label>
+                        <input type="number" id="revenue" value="100000" class="w-full p-2 border rounded" />
+                        <label class="block mt-4 mb-2 font-medium">Profit (₹)</label>
+                        <input type="number" id="profit" value="30000" class="w-full p-2 border rounded" />
+                        <label class="block mt-4 mb-2 font-medium">Ad Spend (₹)</label>
+                        <input type="number" id="adspend" value="20000" class="w-full p-2 border rounded" />
+                        <button onclick="updatePOASChart()" class="mt-4 bg-amber-600 text-white px-4 py-2 rounded">Compare</button>
+                    </div>
+                    <div class="chart-container h-64">
+                        <canvas id="poasChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.dataset.target).classList.add('active');
+            });
+        });
+
+        // Unit Economics Logic
+        const spend = document.getElementById("spend");
+        const customers = document.getElementById("customers");
+        const spendVal = document.getElementById("spendVal");
+        const custVal = document.getElementById("custVal");
+
+        const ctx1 = document.getElementById("ltvChart").getContext("2d");
+        const ltvChart = new Chart(ctx1, {
+            type: "bar",
+            data: {
+                labels: ["LTV", "CAC"],
+                datasets: [{
+                    label: "₹",
+                    data: [0, 0],
+                    backgroundColor: ["#f59e0b", "#78350f"]
+                }]
+            }
+        });
+
+        function updateLTVChart() {
+            const spendAmount = parseInt(spend.value);
+            const newCust = parseInt(customers.value);
+            const cac = spendAmount / newCust;
+            const ltv = cac * 3; // dummy LTV logic
+
+            spendVal.textContent = "₹ " + spendAmount;
+            custVal.textContent = newCust + " customers";
+
+            ltvChart.data.datasets[0].data = [ltv, cac];
+            ltvChart.update();
+        }
+
+        spend.addEventListener("input", updateLTVChart);
+        customers.addEventListener("input", updateLTVChart);
+        updateLTVChart();
+
+        // POAS vs ROAS logic
+        const ctx2 = document.getElementById("poasChart").getContext("2d");
+        const poasChart = new Chart(ctx2, {
+            type: "bar",
+            data: {
+                labels: ["ROAS", "POAS"],
+                datasets: [{
+                    label: "Ratio",
+                    data: [0, 0],
+                    backgroundColor: ["#f59e0b", "#16a34a"]
+                }]
+            }
+        });
+
+        function updatePOASChart() {
+            const revenue = parseFloat(document.getElementById("revenue").value);
+            const profit = parseFloat(document.getElementById("profit").value);
+            const adspend = parseFloat(document.getElementById("adspend").value);
+
+            const roas = revenue / adspend;
+            const poas = profit / adspend;
+
+            poasChart.data.datasets[0].data = [roas, poas];
+            poasChart.update();
+        }
+
+        updatePOASChart();
+    </script>
+</body>
+</html>
